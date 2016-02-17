@@ -13,12 +13,12 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="naf-1e-FJb">
-                                <rect key="frame" x="98" y="134" width="125" height="30"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="bnt-ZP-fYl">
+                                <rect key="frame" x="107" y="123" width="107" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Login With Twitter"/>
+                                <state key="normal" title="Login to Twitter"/>
                                 <connections>
-                                    <action selector="onLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="42u-4O-xM9"/>
+                                    <action selector="onLogin:" destination="BYZ-38-t0r" eventType="touchUpInside" id="SnZ-3G-6ia"/>
                                 </connections>
                             </button>
                         </subviews>
