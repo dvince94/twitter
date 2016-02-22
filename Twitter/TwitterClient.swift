@@ -14,10 +14,80 @@ let twitterConsumerSecret = "nk20lRDVNqzlV1TsbVoVCRpN5tlNIn5BdKcsi1mYmFFVBHyxTJ"
 let twitterBaseURL = NSURL(string: "https://api.twitter.com")
 
 class TwitterClient: BDBOAuth1SessionManager {
-    class var sharedInstance: TwitterClient {
-        struct Static {
-            static let instance = TwitterClient(baseURL: twitterBaseURL, consumerKey: twitterConsumerKey, consumerSecret: twitterConsumerSecret)
+    
+    static let sharedInstance = TwitterClient(baseURL: twitterBaseURL, consumerKey: twitterConsumerKey, consumerSecret: twitterConsumerSecret)
+    
+    var loginSuccess: (()->())?
+    var loginFailure: ((NSError)->())?
+    
+    func login(success: ()->(), failure: (NSError)->()) {
+        loginSuccess = success
+        loginFailure = failure
+        //Fetch request token & redirect to authorization page
+        TwitterClient.sharedInstance.deauthorize()
+        TwitterClient.sharedInstance.fetchRequestTokenWithPath("oauth/request_token", method: "GET", callbackURL: NSURL(string: "cptwitterVincent://oauth"), scope: nil, success: {(requestToken: BDBOAuth1Credential!) -> Void in
+                let authURL = NSURL(string: "https://api.twitter.com/oauth/authorize?oauth_token=\(requestToken.token)")
+                UIApplication.sharedApplication().openURL(authURL!)
+            }) {(error: NSError!) -> Void in
+                print("errpr: \(error.localizedDescription)")
+                self.loginFailure?(error)
         }
-        return Static.instance
+    }
+    
+    func logout() {
+        User.currentUser = nil
+        deauthorize()
+        
+        NSNotificationCenter.defaultCenter().postNotificationName(User.userDidLogoutNotification, object: nil)
+    }
+    
+    func handleOpenUrl(url: NSURL) {
+        let requestToken = BDBOAuth1Credential(queryString: url.query)
+        fetchAccessTokenWithPath("oauth/access_token", method: "POST", requestToken: requestToken, success: {(accessToken: BDBOAuth1Credential!) -> Void in
+                //Get user account/data
+                self.currentAccount({ (user: User) -> () in
+                        User.currentUser = user
+                        self.loginSuccess?()
+                    }, failure: { (error: NSError) -> () in
+                        self.loginFailure?(error)
+                })
+            }) { (error: NSError!) -> Void in
+                self.loginFailure?(error)
+        }
+    }
+    
+    func currentAccount(success: (User) -> (), failure: (NSError) -> ()) {
+        GET("1.1/account/verify_credentials.json", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                //print("user: \(response)")
+                let user = User(dictionary: response as! NSDictionary)
+                success(user)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                failure(error)
+        })
+    }
+    
+    func homeTimeLine(success: ([Tweet] -> ()), failure: (NSError) -> ()) {
+        GET("1.1/statuses/home_timeline.json", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                let tweets = Tweet.tweetsWithArray(response as! [NSDictionary])
+                success(tweets)
+            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                failure(error)
+        })
+    }
+    
+    func retweet(id: String) {
+        POST("1.1/statuses/retweet/\(id).json", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("retweet")
+            }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("\(error.localizedDescription)")
+        }
+    }
+    
+    func favorite(id: String) {
+        POST("1.1/favorites/create.json?id=\(id)", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("favorited")
+            }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("\(error.localizedDescription)")
+        }
     }
 }
