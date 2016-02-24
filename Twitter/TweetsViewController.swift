@@ -11,6 +11,13 @@ import UIKit
 class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var tweets: [Tweet]!
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var bgImgView: UIImageView!
+    @IBOutlet weak var profileImage: UIImageView!
+    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var screenNameLabel: UILabel!
+    @IBOutlet weak var tweetCountLabel: UILabel!
+    @IBOutlet weak var followingCountLabel: UILabel!
+    @IBOutlet weak var followerCountLabel: UILabel!
     
     @IBAction func onLogoutButton(sender: AnyObject) {
         TwitterClient.sharedInstance.logout()
@@ -18,6 +25,7 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.automaticallyAdjustsScrollViewInsets = false
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 100
         TwitterClient.sharedInstance.homeTimeLine({ (tweets: [Tweet]) -> () in
@@ -26,8 +34,17 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
         }, failure: { (error: NSError) -> () in
             print(error.localizedDescription)
         })
-
-        // Do any additional setup after loading the view.
+        
+        let user = User._currentUser
+        if let user = user {
+            bgImgView.setImageWithURL(user.bgImageURL!)
+            profileImage.setImageWithURL(user.profileImageURL!)
+            nameLabel.text! = user.name!
+            screenNameLabel.text! = "@\(user.screenname!)"
+            tweetCountLabel.text! = "\(user.retweet_count)"
+            followerCountLabel.text! = "\(user.follower_count)"
+            followingCountLabel.text! = "\(user.following_count)"
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -49,29 +66,7 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("TweetsCell", forIndexPath: indexPath) as! TweetsCell
-        let tweet = tweets[indexPath.row]
-        //Set the tweet text
-        if let tweetText = tweet.text as? String {
-            cell.tweetLabel.text = tweetText
-        }
-        //Set the time stamp
-        cell.timeStampLabel.text = tweet.timestamp!
-        cell.userName.text = tweet.screenName!
-        if let profileImg = tweet.profileImageURL {
-            cell.profileImage.setImageWithURL(profileImg)
-        }
-        else {
-            //Default image
-            cell.profileImage.image = UIImage(named: "Twitter_logo_blue_48")
-        }
-        cell.retweetCountLabel.text = "\(tweet.retweetCount)"
-        cell.favoritedCountLabel.text = "\(tweet.favoriteCount)"
-        
-        cell.tweetID = tweet.tweetID!
-        cell.retweeted = tweet.retweeted!
-        cell.favorited = tweet.favorited!
-        cell.tweets = tweet
-        
+        cell.tweet = tweets[indexPath.row]
         return cell
     }
     
