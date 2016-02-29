@@ -16,7 +16,7 @@ class User: NSObject {
     var tagline: String?
     var dictionary: NSDictionary?
     var follower_count: Int = 0
-    var retweet_count: Int = 0
+    var tweet_count: Int = 0
     var following_count: Int = 0
     
     init(dictionary: NSDictionary) {
@@ -35,7 +35,7 @@ class User: NSObject {
         }
         
         follower_count = (dictionary["followers_count"] as! Int) ?? 0
-        //retweet_count = (dictionary["retweet_count"] as! Int) ?? 0
+        tweet_count = (dictionary["statuses_count"] as! Int) ?? 0
         following_count = (dictionary["friends_count"] as! Int) ?? 0
         
         tagline = dictionary["description"] as? String

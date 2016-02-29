@@ -19,8 +19,6 @@ class TweetsCell: UITableViewCell {
     @IBOutlet weak var retweetCountLabel: UILabel!
     @IBOutlet weak var favoritedCountLabel: UILabel!
     var tweetID = ""
-    var retweeted: Bool!
-    var favorited: Bool!
     
     var tweet: Tweet! {
         didSet {
@@ -30,7 +28,7 @@ class TweetsCell: UITableViewCell {
             }
             
             //Set the time stamp
-            timeStampLabel.text = tweet.timestamp!
+            timeStampLabel.text = tweet.hour!
             
             //Username
             userName.text = tweet.name!
@@ -43,68 +41,99 @@ class TweetsCell: UITableViewCell {
                 //Default image if profile image is nil
                 profileImage.image = UIImage(named: "Twitter_logo_blue_48")
             }
-            retweetCountLabel.text = "\(tweet.retweetCount)"
-            favoritedCountLabel.text = "\(tweet.favoriteCount)"
             
             //Get the tweet id
             tweetID = tweet.tweetID!
-            retweeted = tweet.retweeted!
-            favorited = tweet.favorited!
-            if (retweeted == false) {
+
+            if (tweet.retweeted! == false) {
+                retweetCountLabel.textColor = UIColor.grayColor()
                 if let image = UIImage(named: "retweet-action") {
                     retweetButton.setImage(image, forState: .Normal)
                 }
             }
             else {
+                retweetCountLabel.textColor = UIColor.greenColor()
                 if let image = UIImage(named: "retweet-action-on") {
                     retweetButton.setImage(image, forState: .Normal)
                 }
             }
-            if (favorited == false) {
+            
+            if (tweet.favorited! == false) {
+                favoritedCountLabel.textColor = UIColor.grayColor()
                 if let image = UIImage(named: "like-action") {
                     favButton.setImage(image, forState: .Normal)
                 }
             }
             else {
+                favoritedCountLabel.textColor = UIColor.redColor()
                 if let image = UIImage(named: "like-action-on") {
                     favButton.setImage(image, forState: .Normal)
                 }
             }
+            
+            retweetCountLabel.text = "\(tweet.retweetCount)"
+            favoritedCountLabel.text = "\(tweet.favoriteCount)"
         }
     }
     
     @IBAction func retweetButtonTapped(sender: AnyObject) {
-        TwitterClient.sharedInstance.retweet(tweetID)
-        self.reloadInputViews()
-        if (retweeted == false) {
-            //retweeted = true
-            retweetCountLabel.text = "\(tweet.retweetCount + 1)"
-            if let image = UIImage(named: "retweet-action-on") {
+        if (tweet.retweeted! == false) {
+            TwitterClient.sharedInstance.retweet(tweetID)
+            tweet.retweeted! = true
+        }
+        else {
+            TwitterClient.sharedInstance.unretweet(tweetID)
+            tweet.retweeted! = false
+        }
+        updateRetweetButton()
+    }
+    
+    //update retweet button image
+    private func updateRetweetButton() {
+        if (tweet.retweeted! == false) {
+            retweetCountLabel.text = "\(--tweet.retweetCount)"
+            retweetCountLabel.textColor = UIColor.grayColor()
+            if let image = UIImage(named: "retweet-action") {
                 retweetButton.setImage(image, forState: .Normal)
             }
         }
         else {
-            //retweeted = false
-            retweetCountLabel.text = "\(tweet.retweetCount)"
-            if let image = UIImage(named: "retweet-action") {
+            retweetCountLabel.text = "\(++tweet.retweetCount)"
+            retweetCountLabel.textColor = UIColor.greenColor()
+            if let image = UIImage(named: "retweet-action-on") {
                 retweetButton.setImage(image, forState: .Normal)
             }
         }
     }
     
     @IBAction func favoriteButtonTapped(sender: AnyObject) {
-        TwitterClient.sharedInstance.favorite(tweetID)
-        if (favorited == false) {
-            favorited = true
-            favoritedCountLabel.text = "\(tweet.favoriteCount + 1)"
-            if let image = UIImage(named: "like-action-on") {
+        if (tweet.favorited! == false) {
+            //set status to like
+            TwitterClient.sharedInstance.favorite(tweetID)
+            tweet.favorited! = true
+            
+        }
+        else {
+            //set status to dislike
+            TwitterClient.sharedInstance.unfavorite(tweetID)
+            tweet.favorited! = false
+        }
+        updateFavoriteButton()
+    }
+    
+    //Update favorite button image
+    private func updateFavoriteButton() {
+        if (tweet.favorited! == false) {
+            favoritedCountLabel.text = "\(--tweet.favoriteCount)"
+            favoritedCountLabel.textColor = UIColor.grayColor()
+            if let image = UIImage(named: "like-action") {
                 favButton.setImage(image, forState: .Normal)
             }
         }
         else {
-            favorited = false
-            favoritedCountLabel.text = "\(tweet.favoriteCount)"
-            if let image = UIImage(named: "like-action") {
+            favoritedCountLabel.text = "\(++tweet.favoriteCount)"
+            favoritedCountLabel.textColor = UIColor.redColor()
+            if let image = UIImage(named: "like-action-on") {
                 favButton.setImage(image, forState: .Normal)
             }
         }

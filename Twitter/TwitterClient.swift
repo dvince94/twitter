@@ -75,9 +75,28 @@ class TwitterClient: BDBOAuth1SessionManager {
         })
     }
     
+//    func userTimeLine(username: String, tweet: [Tweet]) -> [Tweet] {
+//        var update = tweet
+//        GET("1.1/statuses/user_timeline.json?screen_name=\(username)", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+//                let tweets = Tweet(dictionary: response as! NSDictionary)
+//                update.append(tweets)
+//            }, failure: { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+//                print("\(error.localizedDescription)")
+//        })
+//        return update
+//    }
+    
     func retweet(id: String) {
         POST("1.1/statuses/retweet/\(id).json", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
                 print("retweet")
+            }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("\(error.localizedDescription)")
+        }
+    }
+    
+    func unretweet(id: String) {
+        POST("1.1/statuses/unretweet/\(id).json", parameters: nil, progress: nil, success: { (operation:NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("unretweet")
             }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
                 print("\(error.localizedDescription)")
         }
@@ -89,5 +108,31 @@ class TwitterClient: BDBOAuth1SessionManager {
             }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
                 print("\(error.localizedDescription)")
         }
+    }
+    
+    func unfavorite(id: String) {
+        POST("1.1/favorites/destroy.json?id=\(id)", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("unfavorited")
+            }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                print("\(error.localizedDescription)")
+        }
+    }
+    
+    func postMessage(msg: String, id: String) {
+        if (id == "") {
+            POST("1.1/statuses/update.json?status=\(msg)", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("msg sent")
+                }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                    print("\(error.localizedDescription)")
+            }
+        }
+        else {
+            POST("1.1/statuses/update.json?status=\(msg)&in_reply_to_status_id=\(id)", parameters: nil, progress: nil, success: { (operation: NSURLSessionDataTask!, response: AnyObject?) -> Void in
+                print("reply sent")
+                }) { (operation: NSURLSessionDataTask?, error: NSError!) -> Void in
+                    print("\(error.localizedDescription)")
+            }
+        }
+        
     }
 }

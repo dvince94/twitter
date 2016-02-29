@@ -8,7 +8,7 @@
 
 import UIKit
 
-class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class TweetsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, ComposeMessageViewControllerDelegate {
     var tweets: [Tweet]!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var bgImgView: UIImageView!
@@ -25,6 +25,9 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationController?.navigationBar.barTintColor = UIColor(red: 133/255, green: 181/255, blue: 232/255, alpha: 1)
+        self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        
         self.automaticallyAdjustsScrollViewInsets = false
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 100
@@ -41,10 +44,14 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
             profileImage.setImageWithURL(user.profileImageURL!)
             nameLabel.text! = user.name!
             screenNameLabel.text! = "@\(user.screenname!)"
-            tweetCountLabel.text! = "\(user.retweet_count)"
+            tweetCountLabel.text! = "\(user.tweet_count)"
             followerCountLabel.text! = "\(user.follower_count)"
             followingCountLabel.text! = "\(user.following_count)"
         }
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        tableView.reloadData()
     }
 
     override func didReceiveMemoryWarning() {
@@ -69,16 +76,40 @@ class TweetsViewController: UIViewController, UITableViewDataSource, UITableView
         cell.tweet = tweets[indexPath.row]
         return cell
     }
-    
 
-    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        //If action selected by tapping the tableviewcell
+        if let cell = sender as? UITableViewCell {
+            let indexPath = tableView.indexPathForCell(cell)
+            let data = tweets![indexPath!.row]
+            
+            navigationItem.title = "Home"
+            
+            let detailViewController = segue.destinationViewController as! DetailTweetViewController
+            detailViewController.tweet = data
+        }
+        if let navController = segue.destinationViewController as? UINavigationController {
+            let vc = navController.topViewController as! ComposeMessageViewController
+            vc.delegate = self
+        }
     }
-    */
-
+    
+    //compose message view controller delegate filter
+    func updateTweet(composeMessageViewController: ComposeMessageViewController, text: String) {
+        TwitterClient.sharedInstance.postMessage(text, id: "")
+//        let user = User._currentUser
+//        if let user = user {
+//            tweets = TwitterClient.sharedInstance.userTimeLine(user.screenname!, tweet: tweets)
+//            tableView.reloadData()
+//        }
+        TwitterClient.sharedInstance.homeTimeLine({ (tweets: [Tweet]) -> () in
+            self.tweets = tweets
+            self.tableView.reloadData()
+            }, failure: { (error: NSError) -> () in
+                print(error.localizedDescription)
+        })
+    }
 }

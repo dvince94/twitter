@@ -12,8 +12,10 @@ class Tweet: NSObject {
     var text: NSString?
     var retweetCount: Int = 0
     var favoriteCount: Int = 0
+    var hour: String?
     var timestamp: String?
     var name: String?
+    var screenname: String?
     var profileImageURL: NSURL?
     var tweetID: String?
     var favorited: Bool?
@@ -25,6 +27,7 @@ class Tweet: NSObject {
         favoriteCount = (dictionary["favorite_count"] as! Int) ?? 0
         
         name = dictionary.valueForKeyPath("user.name") as? String
+        screenname = dictionary.valueForKeyPath("user.screen_name") as? String
         
         tweetID = dictionary["id_str"] as? String
         
@@ -43,7 +46,9 @@ class Tweet: NSObject {
             formatter.dateFormat = "EEE MMM d HH:mm:ss Z y"
             let date = formatter.dateFromString(createdAtString)
             formatter.dateFormat = "h"
-            timestamp = formatter.stringFromDate(date!) + "h"
+            hour = formatter.stringFromDate(date!) + "h"
+            formatter.dateFormat = "MM/dd/yy, hh:mm a"
+            timestamp = formatter.stringFromDate(date!)
         }
     }
     
